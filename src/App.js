@@ -1,15 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import { FormControl, formControl, Input, InputLabel } from '@mui/material'
 import Todo from './Todo';
+import db from './firebase';
+import firebase from 'firebase/compat/app';
+
+
 
 function App() {
-  const [todos, setTodos] = useState(['Take dogs for walk', 'rubbish out', 'it is fkcinggg true']);
+  const [todos, setTodos] = useState([]);
   const [input, setInput] = useState('');
+
+  // When the app loads , we need to listen to the database and fetch new todos as they get added or removed.
+  useEffect(() => {
+    db.collection('todos').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+      console.log(snapshot.docs.map(doc => doc.data().todo))
+      setTodos(snapshot.docs.map(doc => doc.data().todo))
+    })
+  }, [])
 
   const addTodo = (event) => {
     event.preventDefault();
-    setTodos([...todos, input]);
+
+    db.collection('todos').add({
+      todo: input,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
+
+    // setTodos([...todos, input]);
     setInput('');
   }
 
